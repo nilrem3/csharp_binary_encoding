@@ -105,8 +105,9 @@ where T: Read {
     }
     
     /// Equivalent to the Read7BitEncodedInt method in C#.
+    /// Returns an error if the encoded value does not fit within 32 bits.
     pub fn read_7_bit_encoded_int(self: &mut Self) -> Result<i32, Error> {
-        //TODO: actually check for invalid data and don't allow reading more than 5 bytes
+        const MAX_BYTES: u32 = 5;
         let mut output: i32 = 0;
         let mut bytes_read = 0;
         loop {
@@ -115,16 +116,27 @@ where T: Read {
             let high_bit = byte & 0b10000000;
             output += (lower_bits as i32) << (7 * bytes_read);
             if high_bit == 0 {
-                break;
+                return Ok(output);
             } 
             bytes_read+=1;
+            if bytes_read >= MAX_BYTES - 1{
+                break; // need to handle the most significant bit specially
+            }
         }
         
-        return Ok(output);
+        let max_value_for_most_significant_bit = u8::pow(2, 32 - 28) - 1;
+        let last_byte: u8 = self.read_byte()?;
+        if last_byte > max_value_for_most_significant_bit {
+            Err(Error::new(ErrorKind::InvalidData, "7-bit integer overflowed 32 bits"))
+        } else {
+            Ok(output + ((last_byte as i32) << 28 as i32))
+        }
     }
     
     /// Equivalent to the Read7BitEncodedInt64 method in C#.
+    /// Returns an error if the encoded value does not fit within 64 bits.
     pub fn read_7_bit_encoded_int64(self: &mut Self) -> Result<i64, Error> {
+        const MAX_BYTES: u32 = 10;
         let mut output: i64 = 0; 
         let mut bytes_read = 0;
         loop {
@@ -133,12 +145,21 @@ where T: Read {
             let high_bit = byte & 0b10000000;
             output += (lower_bits as i64) << (7 * bytes_read);
             if high_bit == 0 {
-                break;
+                return Ok(output);
             }
             bytes_read+=1;
+            if bytes_read >= MAX_BYTES - 1 {
+                break;
+            }
         }
 
-        return Ok(output);
+        let max_value_for_most_significant_bit = u8::pow(2, 64 - 63) - 1;
+        let last_byte = self.read_byte()?;
+        if last_byte > max_value_for_most_significant_bit {
+            Err(Error::new(ErrorKind::InvalidData, "7-bit encoded integer overflowed 64 bits"))
+        } else {
+            Ok(output + ((last_byte as i64) << 63))
+        }
     }
     
     /// Equivalent to the ReadBoolean method in C#.
@@ -260,6 +281,7 @@ mod tests {
 
     #[test]
     fn decode_all_types() -> Result<(), Error>{
+        //TODO: also run the c# program to generate output.bin from within this test
         let file = File::open("cs_test_input_generation/output.bin")?;
         let mut reader = BinaryReader::new(file);
         // read the test data written in generate_test_bin.cs
@@ -285,6 +307,25 @@ mod tests {
         assert_eq!(404_i32, reader.read_7_bit_encoded_int()?);
         assert_eq!(9000000000000000000_i64, reader.read_7_bit_encoded_int64()?);
         assert_eq!(-500000000000000000_i64, reader.read_7_bit_encoded_int64()?);
+        Ok(())
+    }
+
+    #[test] 
+    fn overflow_7_bit_encoded_int() -> Result<(), Error>{
+        use std::io::Cursor;
+        let data: [u8; 15] = [ 0xFF; 15 ];
+        let cursor = Cursor::new(data);
+
+        let mut reader = BinaryReader::new(cursor);
+        let result = reader.read_7_bit_encoded_int();
+        if let Ok(_) = result {
+            panic!() // it should have errored
+        }
+
+        let result_64 = reader.read_7_bit_encoded_int64();
+        if let Ok(_) = result_64 {
+            panic!() // it should have errored
+        }
         Ok(())
     }
 }
