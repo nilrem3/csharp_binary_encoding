@@ -1,2 +1,5 @@
 /target
+/cs_test_input_generation/bin
+/cs_test_input_generation/obj
+/cs_test_input_generation/output.bin
 Cargo.lock

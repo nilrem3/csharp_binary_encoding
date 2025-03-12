@@ -9,6 +9,13 @@ pub struct BinaryReader<T: Read> {
 
 impl<T> BinaryReader<T> 
 where T: Read {
+    pub fn new(input: T) -> Self {
+        Self {
+            input,
+            buf: Vec::new()
+        }
+    }
+
     fn ensure_internal_buffer_size(self: &mut Self, min_size: usize) -> Result<(), Error>{
         if self.buf.len() >= min_size {
             return Ok(());
@@ -58,18 +65,35 @@ where T: Read {
 
     pub fn read_7_bit_encoded_int(self: &mut Self) -> Result<i32, Error> {
         let mut output: i32 = 0;
-
+        let mut bytes_read = 0;
         loop {
             let byte: u8 = self.read_byte()?;
             let lower_bits = byte & 0b01111111;
             let high_bit = byte & 0b10000000;
-            output += lower_bits as i32;
+            output += (lower_bits as i32) << (7 * bytes_read);
             if high_bit == 0 {
                 break;
             } 
-            output <<= 7;
+            bytes_read+=1;
         }
         
+        return Ok(output);
+    }
+
+    pub fn read_7_bit_encoded_int64(self: &mut Self) -> Result<i64, Error> {
+        let mut output: i64 = 0; 
+        let mut bytes_read = 0;
+        loop {
+            let byte: u8 = self.read_byte()?;
+            let lower_bits = byte & 0b01111111;
+            let high_bit = byte & 0b10000000;
+            output += (lower_bits as i64) << (7 * bytes_read);
+            if high_bit == 0 {
+                break;
+            }
+            bytes_read+=1;
+        }
+
         return Ok(output);
     }
 
@@ -122,8 +146,10 @@ where T: Read {
         loop { 
             bytes[current_index] = self.read_byte()?;
             decode_result = String::from_utf8(bytes.to_vec());
-            if let Ok(result) = decode_result {
-                num_chars_read = result.len();
+            if let Ok(result) = &decode_result {
+                let result = result.trim_matches(char::from(0)); // trim null bytes
+                num_chars_read = result.chars().count();
+                break;
             } else {
                 current_index+=1;
                 if current_index >= MAX_BYTES_PER_CHAR {
@@ -132,9 +158,57 @@ where T: Read {
             }
         }
         if num_chars_read == 1 {
-            return Ok(decode_result.expect("Failed to decode character.").chars().next().expect("should be impossible"));
+            if let Ok(result) = decode_result {
+                return Ok(result.trim_matches(char::from(0)).chars().next().expect("?"))
+            } else {
+                return Err(Error::new(ErrorKind::InvalidData, "Failed to decode bytes"));
+            }
         }
         Err(Error::new(ErrorKind::InvalidData, "Failed to read exactly one character"))
     }
     
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs::File;
+
+    #[test]
+    fn decode_all_types() -> Result<(), Error>{
+        let file = File::open("cs_test_input_generation/output.bin")?;
+        let mut reader = BinaryReader::new(file);
+        // read the test data written in Program.cs
+        assert!(reader.read_boolean()?);
+        assert!(!reader.read_boolean()?);
+        assert_eq!(0x45, reader.read_byte()?);
+        assert_eq!(vec![0x01, 0x02, 0x03, 0x04, 0x05], reader.read_bytes(5)?);
+        assert_eq!('\u{2603}' as char, reader.read_char()?);
+        assert_eq!(727.247_f64, reader.read_double()?);
+        //TODO: read_half function
+        //assert_eq!(247_f16, reader.read_half()?);
+        reader.read_bytes(2)?; // deal with the f16 we don't have a method for yet
+        assert_eq!(-5_i16, reader.read_i16()?);
+        assert_eq!(-100_i32, reader.read_i32()?);
+        assert_eq!(-2147483649_i64, reader.read_i64()?);
+        //TODO: read i8
+        //assert_eq!(-112_i8, reader.read_i8()?);
+        reader.read_byte()?; // deal with i8 byte we don't have a method to read yet
+        assert_eq!(5.2_f32, reader.read_single()?);
+        assert_eq!("meowmeowmeowmeowmeow".to_string(), reader.read_string()?);
+        //TODO: read u16
+        //assert_eq!(624_u16, reader.read_u16());
+        reader.read_bytes(2)?; // deal with bytes from u16
+        //TODO: read u32
+        //assert_eq!(3000000000_u32, reader.read_u32());
+        reader.read_bytes(4)?; // deal with bytes from u32;
+        //TODO: read u64
+        //assert_eq!(42307830165_u64, reader.read_u64());
+        reader.read_bytes(8)?; // deal with bytes from u64;
+        assert_eq!(-723_i32, reader.read_7_bit_encoded_int()?);
+        assert_eq!(404_i32, reader.read_7_bit_encoded_int()?);
+        assert_eq!(9000000000000000000_i64, reader.read_7_bit_encoded_int64()?);
+        assert_eq!(-500000000000000000_i64, reader.read_7_bit_encoded_int64()?);
+        Ok(())
+    }
 }
