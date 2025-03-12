@@ -7,6 +7,8 @@ description = "Decode binary data written by C#'s BinaryWriter class."
 readme = "README.md"
 license = "GPL-3.0-or-later"
 license-file = "LICENSE"
+keywords = ["csharp", "binary", "decode", "deserialize"]
+categories = ["encoding"]
 
 [dependencies]
 
