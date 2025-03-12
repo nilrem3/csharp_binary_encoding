@@ -204,7 +204,7 @@ mod tests {
     fn decode_all_types() -> Result<(), Error>{
         let file = File::open("cs_test_input_generation/output.bin")?;
         let mut reader = BinaryReader::new(file);
-        // read the test data written in Program.cs
+        // read the test data written in generate_test_bin.cs
         assert!(reader.read_boolean()?);
         assert!(!reader.read_boolean()?);
         assert_eq!(0x45, reader.read_byte()?);
