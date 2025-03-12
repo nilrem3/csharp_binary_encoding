@@ -1,14 +1,53 @@
+//! A crate for decoding binary data encoded with the C# [`System.IO.BinaryWriter`] Class.
+//!
+//! # Limitations:
+//! - Currently only supports the utf-8 encoding.
+//! - Based on .NET version 9.0. May be compatible with other versions, but no compatibility is
+//! gauranteed.
+//!
+//! [`System.IO.BinaryWriter`]: <https://learn.microsoft.com/en-us/dotnet/api/system.io.binarywriter>
+#[warn(missing_docs)]
+
 use std::io::{prelude::*, Error, ErrorKind};
 
+/// Analogous to the [`System.IO.BinaryReader`] C# Class.
+///
+/// Example
+/// ```
+/// # use std::io::BufReader;
+/// # use std::io::Cursor;
+/// # use std::io::Error;
+/// # use csharp_binary_reader::BinaryReader;
+/// // Create a reader to read from
+/// // Cursor implements Read, so we can decode data from it.
+/// let bytes: [u8; 11] = [ 0x8F, 0x72, 0x04, 0x6D, 0x65, 0x6F, 0x77, 0xD7, 0xA3, 0xE8, 0x40 ];
+/// let cursor = Cursor::new(bytes);
+/// 
+/// // Construct the reader
+/// let mut reader = BinaryReader::new(cursor);
+///
+/// // Read values
+/// assert_eq!(14607, reader.read_7_bit_encoded_int()?);
+/// assert_eq!("meow".to_string(), reader.read_string()?);
+/// assert_eq!(7.27_f32, reader.read_single()?);
+/// # Ok::<(), Error>(())
+/// ```
+///
+///
+///
+/// [`System.IO.BinaryReader`]: <https://learn.microsoft.com/en-us/dotnet/api/system.io.binaryreader>
 pub struct BinaryReader<T: Read> {
     input: T,
     buf: Vec<u8>
 }
 
-
-
+/// All functions in this implementation return an error if the underlying Read returns an error,
+/// or if there aren't enough bytes to read.  Individual functions may also return errors for
+/// additional reasons.
 impl<T> BinaryReader<T> 
 where T: Read {
+
+    ///Creates a new BinaryReader which will read data from the provided Reader.
     pub fn new(input: T) -> Self {
         Self {
             input,
@@ -33,6 +72,7 @@ where T: Read {
         return Ok(());
     }
 
+    /// Equivalent to the ReadBytes method in C#. Reads the specified number of bytes.
     pub fn read_bytes(self: &mut Self, num_bytes: usize) -> Result<Vec<u8>, Error> {
         if num_bytes > self.buf.len() {
             let enough_bytes_available = self.ensure_internal_buffer_size(num_bytes);
@@ -50,20 +90,23 @@ where T: Read {
         }
         return Ok(&self.buf.as_slice()[1..num_bytes]);
     }
-
+    
     pub fn peek_byte(self: &mut Self) -> Result<u8, Error> {
         if let Err(e) = self.ensure_internal_buffer_size(1) {
             return Err(e);
         }
         return Ok(self.buf[0]);
     }
-
+    
+    /// Equivalent to the ReadByte method in C#. Reads one byte from the stream. 
     pub fn read_byte(self: &mut Self) -> Result<u8, Error> {
         let vec = self.read_bytes(1)?;
         return Ok(vec[0]);
     }
-
+    
+    /// Equivalent to the Read7BitEncodedInt method in C#.
     pub fn read_7_bit_encoded_int(self: &mut Self) -> Result<i32, Error> {
+        //TODO: actually check for invalid data and don't allow reading more than 5 bytes
         let mut output: i32 = 0;
         let mut bytes_read = 0;
         loop {
@@ -79,7 +122,8 @@ where T: Read {
         
         return Ok(output);
     }
-
+    
+    /// Equivalent to the Read7BitEncodedInt64 method in C#.
     pub fn read_7_bit_encoded_int64(self: &mut Self) -> Result<i64, Error> {
         let mut output: i64 = 0; 
         let mut bytes_read = 0;
@@ -96,28 +140,34 @@ where T: Read {
 
         return Ok(output);
     }
-
+    
+    /// Equivalent to the ReadBoolean method in C#.
     pub fn read_boolean(self: &mut Self) -> Result<bool, Error> {
         let byte = self.read_byte()?;
         return Ok(byte != 0);
     }
-
+    
+    /// Equivalent to the ReadSingle method in C#.
     pub fn read_single(self: &mut Self) -> Result<f32, Error> {
         let bytes: [u8; 4] = self.read_bytes(4)?.try_into().unwrap();
         return Ok(f32::from_le_bytes(bytes));
     }
 
+    /// Equivalent to the ReadDouble method in C#.
     pub fn read_double(self: &mut Self) -> Result<f64, Error> {
         let bytes: [u8; 8] = self.read_bytes(8)?.try_into().unwrap();
         return Ok(f64::from_le_bytes(bytes));
     }
-
+    
+    /// Equivalent to the ReadHalf method in C#.
     #[cfg(feature = "f16_support")]
     pub fn read_half(self: &mut Self) -> Result<f16, Error> {
         let bytes: [u8; 2] = self.read_bytes(2)?.try_into().unwrap();
         return Ok(f16::from_le_bytes(bytes));
     }
-
+    
+    /// Equivalent to the ReadString method in C#.
+    /// Returns an error if the data read is not valid utf-8.
     pub fn read_string(self: &mut Self) -> Result<String, Error> {
         let length: usize = self.read_7_bit_encoded_int()? as usize;
         let string_bytes = self.read_bytes(length)?;
@@ -127,42 +177,50 @@ where T: Read {
         }
     }
     
+    /// Equivalent to the ReadSByte method in C#.
     pub fn read_i8(self: &mut Self) -> Result<i8, Error> {
         let bytes: [u8; 1] = [self.read_byte()?];
         return Ok(i8::from_le_bytes(bytes));
     }
 
+    /// Equivalent to the ReadInt16 method in C#.
     pub fn read_i16(self: &mut Self) -> Result<i16, Error> {
         let bytes: [u8; 2] = self.read_bytes(2)?.try_into().unwrap();
         return Ok(i16::from_le_bytes(bytes));
     }
 
+    /// Equivalent to the ReadInt32 method in C#.
     pub fn read_i32(self: &mut Self) -> Result<i32, Error> {
         let bytes: [u8; 4] = self.read_bytes(4)?.try_into().unwrap();
         return Ok(i32::from_le_bytes(bytes));
     }
 
+    /// Equivalent to the ReadInt64 method in C#.
     pub fn read_i64(self: &mut Self) -> Result<i64, Error> {
         let bytes: [u8; 8] = self.read_bytes(8)?.try_into().unwrap();
         return Ok(i64::from_le_bytes(bytes));
     }
 
+    /// Equivalent to the ReadUint16 method in C#.
     pub fn read_u16(self: &mut Self) -> Result<u16, Error> {
         let bytes: [u8; 2] = self.read_bytes(2)?.try_into().unwrap();
         return Ok(u16::from_le_bytes(bytes));
     }
 
+    /// Equivalent to the ReadUint32 method in C#.
     pub fn read_u32(self: &mut Self) -> Result<u32, Error> {
         let bytes: [u8; 4] = self.read_bytes(4)?.try_into().unwrap();
         return Ok(u32::from_le_bytes(bytes));
     }
 
+    /// Equivalent to the ReadUint64 method in C#.
     pub fn read_u64(self: &mut Self) -> Result<u64, Error> {
         let bytes: [u8; 8] = self.read_bytes(8)?.try_into().unwrap();
         return Ok(u64::from_le_bytes(bytes));
     }
     
     // Implementation taken from the c# dotnet runtime's implementation of BinaryReader
+    // Licensed by the .NET foundation, can be found at https://github.com/dotnet/runtime
     pub fn read_char(self: &mut Self) -> Result<char, Error> {
         const MAX_BYTES_PER_CHAR: usize = 4;
         let mut bytes: [u8; MAX_BYTES_PER_CHAR] = [0; MAX_BYTES_PER_CHAR];
