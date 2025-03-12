@@ -126,6 +126,11 @@ where T: Read {
             Err(_) => Err(Error::new(ErrorKind::InvalidData, "Utf8 Error"))
         }
     }
+    
+    pub fn read_i8(self: &mut Self) -> Result<i8, Error> {
+        let bytes: [u8; 1] = [self.read_byte()?];
+        return Ok(i8::from_le_bytes(bytes));
+    }
 
     pub fn read_i16(self: &mut Self) -> Result<i16, Error> {
         let bytes: [u8; 2] = self.read_bytes(2)?.try_into().unwrap();
@@ -140,6 +145,21 @@ where T: Read {
     pub fn read_i64(self: &mut Self) -> Result<i64, Error> {
         let bytes: [u8; 8] = self.read_bytes(8)?.try_into().unwrap();
         return Ok(i64::from_le_bytes(bytes));
+    }
+
+    pub fn read_u16(self: &mut Self) -> Result<u16, Error> {
+        let bytes: [u8; 2] = self.read_bytes(2)?.try_into().unwrap();
+        return Ok(u16::from_le_bytes(bytes));
+    }
+
+    pub fn read_u32(self: &mut Self) -> Result<u32, Error> {
+        let bytes: [u8; 4] = self.read_bytes(4)?.try_into().unwrap();
+        return Ok(u32::from_le_bytes(bytes));
+    }
+
+    pub fn read_u64(self: &mut Self) -> Result<u64, Error> {
+        let bytes: [u8; 8] = self.read_bytes(8)?.try_into().unwrap();
+        return Ok(u64::from_le_bytes(bytes));
     }
     
     // Implementation taken from the c# dotnet runtime's implementation of BinaryReader
@@ -190,27 +210,19 @@ mod tests {
         assert_eq!(0x45, reader.read_byte()?);
         assert_eq!(vec![0x01, 0x02, 0x03, 0x04, 0x05], reader.read_bytes(5)?);
         assert_eq!('\u{2603}' as char, reader.read_char()?);
+        assert_eq!(727.247_f64, reader.read_double()?);
         //TODO: properly test reading of f16 
-        //assert_eq!(727.247_f64, reader.read_double()?);
+        //assert_eq!(247_f16, reader.read_half()?);
         reader.read_bytes(2)?; // just skip the two bits instead
-        assert_eq!(247_f16, reader.read_half()?);
         assert_eq!(-5_i16, reader.read_i16()?);
         assert_eq!(-100_i32, reader.read_i32()?);
         assert_eq!(-2147483649_i64, reader.read_i64()?);
-        //TODO: read i8
-        //assert_eq!(-112_i8, reader.read_i8()?);
-        reader.read_byte()?; // deal with i8 byte we don't have a method to read yet
+        assert_eq!(-112_i8, reader.read_i8()?);
         assert_eq!(5.2_f32, reader.read_single()?);
         assert_eq!("meowmeowmeowmeowmeow".to_string(), reader.read_string()?);
-        //TODO: read u16
-        //assert_eq!(624_u16, reader.read_u16());
-        reader.read_bytes(2)?; // deal with bytes from u16
-        //TODO: read u32
-        //assert_eq!(3000000000_u32, reader.read_u32());
-        reader.read_bytes(4)?; // deal with bytes from u32;
-        //TODO: read u64
-        //assert_eq!(42307830165_u64, reader.read_u64());
-        reader.read_bytes(8)?; // deal with bytes from u64;
+        assert_eq!(624_u16, reader.read_u16()?);
+        assert_eq!(3000000000_u32, reader.read_u32()?);
+        assert_eq!(42307830165_u64, reader.read_u64()?);
         assert_eq!(-723_i32, reader.read_7_bit_encoded_int()?);
         assert_eq!(404_i32, reader.read_7_bit_encoded_int()?);
         assert_eq!(9000000000000000000_i64, reader.read_7_bit_encoded_int64()?);
