@@ -1,7 +1,12 @@
 [package]
 name = "csharp_binary_reader"
 version = "0.1.0"
-edition = "2021"
+authors = ["nilrem <nilremdev@gmail.com>"]
+edition = "2024"
+description = "Decode binary data written by C#'s BinaryWriter class."
+readme = "README.md"
+license = "GPL-3.0-or-later"
+license-file = "LICENSE"
 
 [dependencies]
 
