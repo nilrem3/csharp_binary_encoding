@@ -1,4 +1,6 @@
 #![doc = include_str!("../README.md")]
+#![cfg_attr(feature = "f16_support", feature(f16))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 use std::io::{prelude::*, Error, ErrorKind};
 
@@ -157,6 +159,8 @@ where T: Read {
     }
     
     /// Equivalent to the ReadHalf method in C#.
+    /// Requires the `f16_support` feature.
+    #[cfg_attr(docsrs, doc(cfg(feature = "f16_support")))]
     #[cfg(feature = "f16_support")]
     pub fn read_half(self: &mut Self) -> Result<f16, Error> {
         let bytes: [u8; 2] = self.read_bytes(2)?.try_into().unwrap();
@@ -267,9 +271,13 @@ mod tests {
         assert_eq!(vec![0x01, 0x02, 0x03, 0x04, 0x05], reader.read_bytes(5)?);
         assert_eq!('\u{2603}' as char, reader.read_char()?);
         assert_eq!(727.247_f64, reader.read_double()?);
-        //TODO: properly test reading of f16 
-        //assert_eq!(247_f16, reader.read_half()?);
-        reader.read_bytes(2)?; // just skip the two bits instead
+        cfg_if::cfg_if! {
+            if #[cfg(feature = "f16_support")] {
+                assert_eq!(247_f16, reader.read_half()?);
+            } else {
+                reader.read_bytes(2)?; // just skip the two bytes instead
+            }
+        }
         assert_eq!(-5_i16, reader.read_i16()?);
         assert_eq!(-100_i32, reader.read_i32()?);
         assert_eq!(-2147483649_i64, reader.read_i64()?);

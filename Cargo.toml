@@ -12,5 +12,12 @@ categories = ["encoding"]
 
 [dependencies]
 
+[dev-dependencies]
+cfg-if = "1.0.0"
+
 [features]
 f16_support = []
+
+[package.metadata.docs.rs]
+all-features = "true"
+rustdoc-args = ["--cfg", "docsrs"]
