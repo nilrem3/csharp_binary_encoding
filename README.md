@@ -19,7 +19,7 @@ let mut reader = BinaryReader::new(cursor);
 // Read values
 assert_eq!(14607, reader.read_7_bit_encoded_int()?);
 assert_eq!("meow".to_string(), reader.read_string()?);
-assert_eq!(7.27_f32, reader.read_single()?);
+assert_eq!(7.27_f32, reader.read_f32()?);
 # Ok::<(), Error>(())
 ```
 //!

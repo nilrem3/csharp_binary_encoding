@@ -147,13 +147,13 @@ where T: Read {
     }
     
     /// Equivalent to the ReadSingle method in C#.
-    pub fn read_single(self: &mut Self) -> Result<f32, Error> {
+    pub fn read_f32(self: &mut Self) -> Result<f32, Error> {
         let bytes: [u8; 4] = self.read_bytes(4)?.try_into().unwrap();
         return Ok(f32::from_le_bytes(bytes));
     }
 
     /// Equivalent to the ReadDouble method in C#.
-    pub fn read_double(self: &mut Self) -> Result<f64, Error> {
+    pub fn read_f64(self: &mut Self) -> Result<f64, Error> {
         let bytes: [u8; 8] = self.read_bytes(8)?.try_into().unwrap();
         return Ok(f64::from_le_bytes(bytes));
     }
@@ -162,7 +162,7 @@ where T: Read {
     /// Requires the `f16_support` feature.
     #[cfg_attr(docsrs, doc(cfg(feature = "f16_support")))]
     #[cfg(feature = "f16_support")]
-    pub fn read_half(self: &mut Self) -> Result<f16, Error> {
+    pub fn read_f16(self: &mut Self) -> Result<f16, Error> {
         let bytes: [u8; 2] = self.read_bytes(2)?.try_into().unwrap();
         return Ok(f16::from_le_bytes(bytes));
     }
@@ -277,10 +277,10 @@ mod tests {
         assert_eq!(0x45, reader.read_byte()?);
         assert_eq!(vec![0x01, 0x02, 0x03, 0x04, 0x05], reader.read_bytes(5)?);
         assert_eq!('\u{2603}' as char, reader.read_char()?);
-        assert_eq!(727.247_f64, reader.read_double()?);
+        assert_eq!(727.247_f64, reader.read_f64()?);
         cfg_if::cfg_if! {
             if #[cfg(feature = "f16_support")] {
-                assert_eq!(247_f16, reader.read_half()?);
+                assert_eq!(247_f16, reader.read_f16()?);
             } else {
                 reader.read_bytes(2)?; // just skip the two bytes instead
             }
@@ -289,7 +289,7 @@ mod tests {
         assert_eq!(-100_i32, reader.read_i32()?);
         assert_eq!(-2147483649_i64, reader.read_i64()?);
         assert_eq!(-112_i8, reader.read_i8()?);
-        assert_eq!(5.2_f32, reader.read_single()?);
+        assert_eq!(5.2_f32, reader.read_f32()?);
         assert_eq!("meowmeowmeowmeowmeow".to_string(), reader.read_string()?);
         assert_eq!(624_u16, reader.read_u16()?);
         assert_eq!(3000000000_u32, reader.read_u32()?);
