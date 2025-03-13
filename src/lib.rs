@@ -257,13 +257,20 @@ where T: Read {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::fs::File;
 
     #[test]
     fn decode_all_types() -> Result<(), Error>{
+        use std::fs::File;
+        use xshell::{Shell, cmd};
         //TODO: also run the c# program to generate output.bin from within this test
+        let sh = Shell::new().unwrap();
+        let folder = "cs_test_input_generation";
+        sh.change_dir(folder);
+        cmd!(sh, "dotnet run").run().unwrap();
+
         let file = File::open("cs_test_input_generation/output.bin")?;
         let mut reader = BinaryReader::new(file);
+
         // read the test data written in generate_test_bin.cs
         assert!(reader.read_boolean()?);
         assert!(!reader.read_boolean()?);
