@@ -1,5 +1,5 @@
 [package]
-name = "csharp_binary_reader"
+name = "csharp_binary_encoding"
 version = "0.1.0"
 authors = ["nilrem <nilremdev@gmail.com>"]
 edition = "2024"
