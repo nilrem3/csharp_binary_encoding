@@ -29,62 +29,52 @@ where T: Read {
         }
     }
 
-    fn ensure_internal_buffer_size(self: &mut Self, min_size: usize) -> Result<(), Error>{
+    fn ensure_internal_buffer_size(&mut self, min_size: usize) -> Result<(), Error>{
         if self.buf.len() >= min_size {
             return Ok(());
         }
 
-        let error = self.input.read_to_end(&mut self.buf);
-        if let Err(x) = error {
-            return Err(x);
-        }
+        self.input.read_to_end(&mut self.buf)?;
 
         if self.buf.len() < min_size {
             return Err(Error::new(ErrorKind::UnexpectedEof, "Not enough bytes avaialable to read"));
         }
 
-        return Ok(());
+        Ok(())
     }
 
     /// Equivalent to the ReadByte method in C#. Reads one byte from the stream. 
-    pub fn read_byte(self: &mut Self) -> Result<u8, Error> {
+    pub fn read_byte(&mut self) -> Result<u8, Error> {
         let vec = self.read_bytes(1)?;
-        return Ok(vec[0]);
+        Ok(vec[0])
     }
 
     /// Equivalent to the ReadBytes method in C#. Reads the specified number of bytes.
-    pub fn read_bytes(self: &mut Self, num_bytes: usize) -> Result<Vec<u8>, Error> {
+    pub fn read_bytes(&mut self, num_bytes: usize) -> Result<Vec<u8>, Error> {
         if num_bytes > self.buf.len() {
-            let enough_bytes_available = self.ensure_internal_buffer_size(num_bytes);
-            if let Err(e) = enough_bytes_available {
-                return Err(e);
-            }
+            self.ensure_internal_buffer_size(num_bytes)?;
         }
         let output = Vec::from_iter(self.buf.drain(0..num_bytes));
-        return Ok(output);
+        Ok(output)
     }
     
     /// Doesn't correspond to any specific c# method. Provided for convenience. Gets the next byte
     /// without advancing the data stream.
-    pub fn peek_byte(self: &mut Self) -> Result<u8, Error> {
-        if let Err(e) = self.ensure_internal_buffer_size(1) {
-            return Err(e);
-        }
-        return Ok(self.buf[0]);
+    pub fn peek_byte(&mut self) -> Result<u8, Error> {
+        self.ensure_internal_buffer_size(1)?;
+        Ok(self.buf[0])
     }
     
     /// Doesn't correspond to any specific c# method. Provided for convenience. Gets the specified
     /// number of bytes without advancing the data stream.
-    pub fn peek_bytes(self: &mut Self, num_bytes: usize) -> Result<&[u8], Error> {
-        if let Err(e) = self.ensure_internal_buffer_size(num_bytes) {
-            return Err(e);
-        }
-        return Ok(&self.buf.as_slice()[1..num_bytes]);
+    pub fn peek_bytes(&mut self, num_bytes: usize) -> Result<&[u8], Error> {
+        self.ensure_internal_buffer_size(num_bytes)?;
+        Ok(&self.buf.as_slice()[1..num_bytes])
     }
     
     /// Equivalent to the Read7BitEncodedInt method in C#.
     /// Returns an [std::io::Error] with type `InvalidData` if the encoded value does not fit within 32 bits.
-    pub fn read_7_bit_encoded_int(self: &mut Self) -> Result<i32, Error> {
+    pub fn read_7_bit_encoded_int(&mut self) -> Result<i32, Error> {
         const MAX_BYTES: u32 = 5;
         let mut output: i32 = 0;
         let mut bytes_read = 0;
@@ -107,13 +97,13 @@ where T: Read {
         if last_byte > max_value_for_most_significant_bit {
             Err(Error::new(ErrorKind::InvalidData, "7-bit integer overflowed 32 bits"))
         } else {
-            Ok(output + ((last_byte as i32) << 28 as i32))
+            Ok(output + ((last_byte as i32) << 28_i32))
         }
     }
     
     /// Equivalent to the Read7BitEncodedInt64 method in C#.
     /// Returns an [std::io::Error] with type `InvalidData` if the encoded value does not fit within 64 bits.
-    pub fn read_7_bit_encoded_int64(self: &mut Self) -> Result<i64, Error> {
+    pub fn read_7_bit_encoded_int64(&mut self) -> Result<i64, Error> {
         const MAX_BYTES: u32 = 10;
         let mut output: i64 = 0; 
         let mut bytes_read = 0;
@@ -141,35 +131,35 @@ where T: Read {
     }
     
     /// Equivalent to the ReadBoolean method in C#.
-    pub fn read_boolean(self: &mut Self) -> Result<bool, Error> {
+    pub fn read_boolean(&mut self) -> Result<bool, Error> {
         let byte = self.read_byte()?;
-        return Ok(byte != 0);
+        Ok(byte != 0)
     }
     
     /// Equivalent to the ReadSingle method in C#.
-    pub fn read_f32(self: &mut Self) -> Result<f32, Error> {
+    pub fn read_f32(&mut self) -> Result<f32, Error> {
         let bytes: [u8; 4] = self.read_bytes(4)?.try_into().unwrap();
-        return Ok(f32::from_le_bytes(bytes));
+        Ok(f32::from_le_bytes(bytes))
     }
 
     /// Equivalent to the ReadDouble method in C#.
-    pub fn read_f64(self: &mut Self) -> Result<f64, Error> {
+    pub fn read_f64(&mut self) -> Result<f64, Error> {
         let bytes: [u8; 8] = self.read_bytes(8)?.try_into().unwrap();
-        return Ok(f64::from_le_bytes(bytes));
+        Ok(f64::from_le_bytes(bytes))
     }
     
     /// Equivalent to the ReadHalf method in C#.
     /// Requires the `f16_support` feature.
     #[cfg_attr(docsrs, doc(cfg(feature = "f16_support")))]
     #[cfg(feature = "f16_support")]
-    pub fn read_f16(self: &mut Self) -> Result<f16, Error> {
+    pub fn read_f16(&mut self) -> Result<f16, Error> {
         let bytes: [u8; 2] = self.read_bytes(2)?.try_into().unwrap();
-        return Ok(f16::from_le_bytes(bytes));
+        Ok(f16::from_le_bytes(bytes))
     }
     
     /// Equivalent to the ReadString method in C#.
     /// Returns an [std::io::Error] with type `InvalidData` if the data read is not valid utf-8.
-    pub fn read_string(self: &mut Self) -> Result<String, Error> {
+    pub fn read_string(&mut self) -> Result<String, Error> {
         let length: usize = self.read_7_bit_encoded_int()? as usize;
         let string_bytes = self.read_bytes(length)?;
         match std::str::from_utf8(string_bytes.as_slice()) {
@@ -179,50 +169,50 @@ where T: Read {
     }
     
     /// Equivalent to the ReadSByte method in C#.
-    pub fn read_i8(self: &mut Self) -> Result<i8, Error> {
+    pub fn read_i8(&mut self) -> Result<i8, Error> {
         let bytes: [u8; 1] = [self.read_byte()?];
-        return Ok(i8::from_le_bytes(bytes));
+        Ok(i8::from_le_bytes(bytes))
     }
 
     /// Equivalent to the ReadInt16 method in C#.
-    pub fn read_i16(self: &mut Self) -> Result<i16, Error> {
+    pub fn read_i16(&mut self) -> Result<i16, Error> {
         let bytes: [u8; 2] = self.read_bytes(2)?.try_into().unwrap();
-        return Ok(i16::from_le_bytes(bytes));
+        Ok(i16::from_le_bytes(bytes))
     }
 
     /// Equivalent to the ReadInt32 method in C#.
-    pub fn read_i32(self: &mut Self) -> Result<i32, Error> {
+    pub fn read_i32(&mut self) -> Result<i32, Error> {
         let bytes: [u8; 4] = self.read_bytes(4)?.try_into().unwrap();
-        return Ok(i32::from_le_bytes(bytes));
+        Ok(i32::from_le_bytes(bytes))
     }
 
     /// Equivalent to the ReadInt64 method in C#.
-    pub fn read_i64(self: &mut Self) -> Result<i64, Error> {
+    pub fn read_i64(&mut self) -> Result<i64, Error> {
         let bytes: [u8; 8] = self.read_bytes(8)?.try_into().unwrap();
-        return Ok(i64::from_le_bytes(bytes));
+        Ok(i64::from_le_bytes(bytes))
     }
 
     /// Equivalent to the ReadUint16 method in C#.
-    pub fn read_u16(self: &mut Self) -> Result<u16, Error> {
+    pub fn read_u16(&mut self) -> Result<u16, Error> {
         let bytes: [u8; 2] = self.read_bytes(2)?.try_into().unwrap();
-        return Ok(u16::from_le_bytes(bytes));
+        Ok(u16::from_le_bytes(bytes))
     }
 
     /// Equivalent to the ReadUint32 method in C#.
-    pub fn read_u32(self: &mut Self) -> Result<u32, Error> {
+    pub fn read_u32(&mut self) -> Result<u32, Error> {
         let bytes: [u8; 4] = self.read_bytes(4)?.try_into().unwrap();
-        return Ok(u32::from_le_bytes(bytes));
+        Ok(u32::from_le_bytes(bytes))
     }
 
     /// Equivalent to the ReadUint64 method in C#.
-    pub fn read_u64(self: &mut Self) -> Result<u64, Error> {
+    pub fn read_u64(&mut self) -> Result<u64, Error> {
         let bytes: [u8; 8] = self.read_bytes(8)?.try_into().unwrap();
-        return Ok(u64::from_le_bytes(bytes));
+        Ok(u64::from_le_bytes(bytes))
     }
     
     // Implementation taken from the c# dotnet runtime's implementation of BinaryReader
     // Licensed by the .NET foundation, can be found at https://github.com/dotnet/runtime
-    pub fn read_char(self: &mut Self) -> Result<char, Error> {
+    pub fn read_char(&mut self) -> Result<char, Error> {
         const MAX_BYTES_PER_CHAR: usize = 4;
         let mut bytes: [u8; MAX_BYTES_PER_CHAR] = [0; MAX_BYTES_PER_CHAR];
         let mut current_index: usize = 0;
