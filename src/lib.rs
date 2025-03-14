@@ -8,10 +8,13 @@ use std::fmt::{Display, Formatter};
 
 /// Indicates that an error has occured because the bytes being decoded were invalid in some way.
 #[non_exhaustive]
-#[derive(Debug, PartialEq, Eq, Copy, Clone)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 pub enum DataDecodeError{
+    /// The underlying reader did not return enough data to construct the type being read.
     NotEnoughBytes,
+    /// The underlying data would overflow the current integer type being constructed.
     IntegerOverflow,
+    /// The underlaying data cannot be converted to the type because it is not valid utf-8
     InvalidUtf8
 }
 
@@ -55,6 +58,7 @@ macro_rules! propogate_inner_error {
 ///
 ///
 /// [`System.IO.BinaryReader`]: <https://learn.microsoft.com/en-us/dotnet/api/system.io.binaryreader>
+#[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub struct BinaryReader<T: Read> {
     input: T,
     buf: Vec<u8>
