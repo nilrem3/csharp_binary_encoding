@@ -7,7 +7,7 @@ A crate for handling binary data in the format used by the C# [`System.IO.Binary
 # use std::io::BufReader;
 # use std::io::Cursor;
 # use std::io::Error;
-# use csharp_binary_encoding::BinaryReader;
+# use csharp_binary_encoding::{BinaryReader, DataDecodeError};
 // Create a reader to read from
 // Cursor implements Read, so we can decode data from it.
 let bytes: [u8; 11] = [ 0x8F, 0x72, 0x04, 0x6D, 0x65, 0x6F, 0x77, 0xD7, 0xA3, 0xE8, 0x40 ];
@@ -17,9 +17,9 @@ let cursor = Cursor::new(bytes);
 let mut reader = BinaryReader::new(cursor);
 
 // Read values
-assert_eq!(14607, reader.read_7_bit_encoded_int()?);
-assert_eq!("meow".to_string(), reader.read_string()?);
-assert_eq!(7.27_f32, reader.read_f32()?);
+assert_eq!(Ok(14607), reader.read_7_bit_encoded_int()?);
+assert_eq!(Ok("meow".to_string()), reader.read_string()?);
+assert_eq!(Ok(7.27_f32), reader.read_f32()?);
 # Ok::<(), Error>(())
 ```
 
