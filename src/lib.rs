@@ -12,9 +12,9 @@ use std::fmt::{Display, Formatter};
 pub enum DataDecodeError{
     /// The underlying reader did not return enough data to construct the type being read.
     NotEnoughBytes,
-    /// The underlying data would overflow the current integer type being constructed.
+    /// The underlying data overflowed the current integer type being constructed.
     IntegerOverflow,
-    /// The underlaying data cannot be converted to the type because it is not valid utf-8
+    /// The underlaying data could not be converted to the type because it is not valid utf-8
     InvalidUtf8
 }
 
@@ -22,8 +22,8 @@ impl Display for DataDecodeError {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         match self {
             Self::NotEnoughBytes => write!(f, "not enough bytes to decode"),
-            Self::IntegerOverflow => write!(f, "decoded integer would overflow"),
-            Self::InvalidUtf8 => write!(f, "data cannot be decoded as valid utf8"),
+            Self::IntegerOverflow => write!(f, "decoded integer overflowed"),
+            Self::InvalidUtf8 => write!(f, "data could not be decoded as valid utf8"),
         }
     }
 }

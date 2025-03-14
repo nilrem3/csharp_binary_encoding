@@ -22,11 +22,11 @@ assert_eq!(Ok(7.27_f32), reader.read_f32()?);
 # Ok::<(), Error>(())
 ```
 
-## Limitations:
-- Currently only the utf-8 encoding is supported.
-- Developed for and tested with .NET version 9.0. Compatibility with other versions may be
+## Limitations
+- Currently, only the utf-8 encoding is supported.
+- Developed for and tested with .NET version 9.0. Compatibility with other versions is likely
   present but should not be counted on.
-- Does not yet support encoding, only decoding.  This is a planned feature.
+- Does not yet support encoding, only decoding. This is a planned feature.
 
 [`System.IO.BinaryWriter`]: <https://learn.microsoft.com/en-us/dotnet/api/system.io.binarywriter>
 [`System.IO.BinaryReader`]: <https://learn.microsoft.com/en-us/dotnet/api/system.io.binaryreader>
