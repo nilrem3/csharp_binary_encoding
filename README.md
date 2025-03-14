@@ -4,10 +4,9 @@ A crate for handling binary data in the format used by the C# [`System.IO.Binary
 - `f16` Enables function for decoding f16 values. Must be compiled with nightly, since f16 is currently an unstable feature in rust.
 ## Example
 ```
-# use std::io::BufReader;
 # use std::io::Cursor;
 # use std::io::Error;
-# use csharp_binary_encoding::{BinaryReader, DataDecodeError};
+# use csharp_binary_encoding::{BinaryReader};
 // Create a reader to read from
 // Cursor implements Read, so we can decode data from it.
 let bytes: [u8; 11] = [ 0x8F, 0x72, 0x04, 0x6D, 0x65, 0x6F, 0x77, 0xD7, 0xA3, 0xE8, 0x40 ];
