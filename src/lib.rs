@@ -1,5 +1,5 @@
 #![doc = include_str!("../README.md")]
-#![cfg_attr(feature = "f16_support", feature(f16))]
+#![cfg_attr(feature = "f16", feature(f16))]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
 use std::io::{prelude::*, Error, ErrorKind};
@@ -149,9 +149,9 @@ where T: Read {
     }
     
     /// Equivalent to the ReadHalf method in C#.
-    /// Requires the `f16_support` feature.
-    #[cfg_attr(docsrs, doc(cfg(feature = "f16_support")))]
-    #[cfg(feature = "f16_support")]
+    /// Requires the `f16` feature.
+    #[cfg_attr(docsrs, doc(cfg(feature = "f16")))]
+    #[cfg(feature = "f16")]
     pub fn read_f16(&mut self) -> Result<f16, Error> {
         let bytes: [u8; 2] = self.read_bytes(2)?.try_into().unwrap();
         Ok(f16::from_le_bytes(bytes))
@@ -269,7 +269,7 @@ mod tests {
         assert_eq!('\u{2603}' as char, reader.read_char()?);
         assert_eq!(727.247_f64, reader.read_f64()?);
         cfg_if::cfg_if! {
-            if #[cfg(feature = "f16_support")] {
+            if #[cfg(feature = "f16")] {
                 assert_eq!(247_f16, reader.read_f16()?);
             } else {
                 reader.read_bytes(2)?; // just skip the two bytes instead

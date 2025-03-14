@@ -1,7 +1,7 @@
 # csharp_binary_encoding
 A crate for handling binary data in the format used by the C# [`System.IO.BinaryWriter`] and [`System.IO.BinaryWriter`] Classes.
 ## Features
-- `f16_support` Enables function for decoding f16 values. Must be compiled with nightly, since f16 is currently an unstable feature in rust.
+- `f16` Enables function for decoding f16 values. Must be compiled with nightly, since f16 is currently an unstable feature in rust.
 ## Example
 ```
 # use std::io::BufReader;
