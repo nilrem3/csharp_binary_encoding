@@ -3,8 +3,11 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
 use std::io::{Error, Read};
+use std::error::Error as stdError;
+use std::fmt::{Display, Formatter};
 
 /// Indicates that an error has occured because the bytes being decoded were invalid in some way.
+#[non_exhaustive]
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub enum DataDecodeError{
     NotEnoughBytes,
@@ -12,6 +15,31 @@ pub enum DataDecodeError{
     InvalidUtf8
 }
 
+impl Display for DataDecodeError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        match self {
+            Self::NotEnoughBytes => write!(f, "not enough bytes to decode"),
+            Self::IntegerOverflow => write!(f, "decoded integer would overflow"),
+            Self::InvalidUtf8 => write!(f, "data cannot be decoded as valid utf8"),
+        }
+    }
+}
+
+impl stdError for DataDecodeError{
+    fn source(&self) -> Option<&(dyn stdError + 'static)> {
+        None // there isn't a lower-level error source
+    }
+
+    fn description(&self) -> &str {
+        "use of deprecated description() method on std::error::Error"
+    }
+
+    fn cause(&self) -> Option<&dyn stdError> {
+        None // deprecated
+    }
+}
+
+/// used like the question mark operator in functions with nested result return types
 macro_rules! propogate_inner_error {
     ($nested_error:expr) => {
         match $nested_error {
