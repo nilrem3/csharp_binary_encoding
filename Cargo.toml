@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["nilrem <nilremdev@gmail.com>"]
 edition = "2024"
 description = "Decode binary data written by C#'s BinaryWriter class."
+documentation = "https://docs.rs/csharp_binary_encoding"
 readme = "README.md"
 repository = "https://github.com/nilrem3/csharp_binary_encoding"
 license = "GPL-3.0-or-later"
