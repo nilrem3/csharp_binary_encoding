@@ -21,6 +21,7 @@ mod macros{
 mod encoding {
     mod binaryreader;
     pub use binaryreader::BinaryReader;
+    mod binarywriter;
 }
 pub use encoding::BinaryReader;
 
