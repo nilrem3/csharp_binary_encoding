@@ -63,7 +63,13 @@ where T: Write {
     }
 
     pub fn write_string(&mut self, data: &str) -> io::Result<usize> {
-        unimplemented!()
+        // first, write the number of bytes the string will take up in utf-8
+        if let Err(e) = self.write_7_bit_encoded_int(data.len().try_into().unwrap()) {
+            return Err(e)
+        }
+        // then, write the utf-8 data. rust str is gauranteed to be valid utf-8 so no further
+        // processing is needed.
+        self.write_bytes(data.as_bytes())
     }
 
     pub fn write_i8(&mut self, data: i8) -> io::Result<usize> {
@@ -95,7 +101,8 @@ where T: Write {
     }
 
     pub fn write_char(&mut self, data: char) -> io::Result<usize> {
-        unimplemented!()
+        let mut buf: [u8; 4] = [0; 4];
+        self.write_bytes(data.encode_utf8(buf.as_mut_slice()).as_bytes())
     }
 
 }
