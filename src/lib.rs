@@ -22,8 +22,10 @@ mod encoding {
     mod binaryreader;
     pub use binaryreader::BinaryReader;
     mod binarywriter;
+    pub use binarywriter::BinaryWriter;
 }
 pub use encoding::BinaryReader;
+pub use encoding::BinaryWriter;
 
 
 /// Indicates that an error has occured because the bytes being decoded were invalid in some way.
@@ -69,17 +71,17 @@ mod tests {
     use super::*;
     use std::io::Error;
 
+    const TEST_FOLDER: &str = "csharp_testing";
+
     #[test]
     fn decode_all_types() -> Result<Result<(), DataDecodeError>, Error>{
         use std::fs::File;
         use xshell::{Shell, cmd};
-        //TODO: also run the c# program to generate output.bin from within this test
         let sh = Shell::new().unwrap();
-        let folder: String = "csharp_testing".to_string();
-        sh.change_dir(&folder);
-        cmd!(sh, "dotnet run").run().unwrap();
+        sh.change_dir(&TEST_FOLDER.to_string());
+        cmd!(sh, "dotnet run generate").run().unwrap();
 
-        let file = File::open(folder + "/output.bin")?;
+        let file = File::open(TEST_FOLDER.to_string()+ "/output.bin")?;
         let mut reader = BinaryReader::new(file);
 
         // read the test data written in generate_test_bin.cs
@@ -109,7 +111,59 @@ mod tests {
         assert_eq!(404_i32, propogate_inner_error!(reader.read_7_bit_encoded_int()?));
         assert_eq!(9000000000000000000_i64, propogate_inner_error!(reader.read_7_bit_encoded_int64()?));
         assert_eq!(-500000000000000000_i64, propogate_inner_error!(reader.read_7_bit_encoded_int64()?));
+
+        let _ = cmd!(sh, "rm -f output.bin").run();
+
         Ok(Ok(()))
+    }
+
+    #[test]
+    fn encode_all_types(){
+        use std::fs::File;
+        use xshell::{Shell, cmd};
+        
+        let sh = Shell::new().unwrap();
+        sh.change_dir(&TEST_FOLDER.to_string());
+
+        let _ = cmd!(sh, "rm -f input.bin").run().unwrap();
+
+        let file = File::create(TEST_FOLDER.to_string() + "/input.bin").unwrap();
+        let mut writer = BinaryWriter::new(file);
+
+        writer.write_boolean(true).unwrap();
+        writer.write_boolean(false).unwrap();
+        writer.write_byte(0x45).unwrap();
+        writer.write_bytes([0x01, 0x02, 0x03, 0x04, 0x05].as_slice()).unwrap();
+        writer.write_char('\u{2603}').unwrap();
+        writer.write_f64(727.247_f64).unwrap();
+        cfg_if::cfg_if!{
+            if #[cfg(feature = "f16")] {
+                writer.write_f16(247_f16).unwrap();
+            } else {
+                writer.write_bytes([0x00, 0x00].as_slice()).unwrap();
+            }
+        }
+        writer.write_i16(-5).unwrap();
+        writer.write_i32(-100).unwrap();
+        writer.write_i64(-2147483649).unwrap();
+        writer.write_i8(-112).unwrap();
+        writer.write_f32(5.2_f32).unwrap();
+        writer.write_string("meowmeowmeowmeowmeow").unwrap();
+        writer.write_u16(624).unwrap();
+        writer.write_u32(3000000000).unwrap();
+        writer.write_u64(42307830165).unwrap();
+        writer.write_7_bit_encoded_int(-723).unwrap();
+        writer.write_7_bit_encoded_int(404).unwrap();
+        writer.write_7_bit_encoded_int64(9000000000000000000).unwrap();
+        writer.write_7_bit_encoded_int64(-500000000000000000).unwrap();
+
+        cfg_if::cfg_if!{
+            if #[cfg(feature = "f16")] {
+                cmd!(sh, "dotnet run verify f16").run().unwrap();
+            } else {
+                cmd!(sh, "dotnet run verify").run().unwrap();
+            }
+        }
     }
 
     #[test] 

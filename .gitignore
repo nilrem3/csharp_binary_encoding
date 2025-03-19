@@ -3,4 +3,5 @@
 /csharp_testing/bin
 /csharp_testing/obj
 /csharp_testing/output.bin
+/csharp_testing/input.bin
 Cargo.lock
