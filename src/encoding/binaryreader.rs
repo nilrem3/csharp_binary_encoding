@@ -210,8 +210,9 @@ where T: Read {
     
     // Implementation translated from the c# dotnet runtime's implementation of BinaryReader
     // MIT Licensed by the .NET foundation, can be found at https://github.com/dotnet/runtime
-    // Returns [DataDecodeError::InvalidUtf8] if the next character is not a valid character in
-    // utf-8
+    /// Equivalent to the ReadChar method in C#.
+    /// Returns [DataDecodeError::InvalidUtf8] if the next character is not a valid character in
+    /// utf-8
     pub fn read_char(&mut self) -> Result<Result<char, DataDecodeError>, Error> {
         const MAX_BYTES_PER_CHAR: usize = 4;
         let mut bytes: [u8; MAX_BYTES_PER_CHAR] = [0; MAX_BYTES_PER_CHAR];
