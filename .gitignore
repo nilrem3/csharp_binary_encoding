@@ -1,6 +1,6 @@
 /target
 /doc
-/cs_test_input_generation/bin
-/cs_test_input_generation/obj
-/cs_test_input_generation/output.bin
+/csharp_testing/bin
+/csharp_testing/obj
+/csharp_testing/output.bin
 Cargo.lock
