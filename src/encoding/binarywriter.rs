@@ -30,11 +30,22 @@ where T: Write {
     }
 
     pub fn write_7_bit_encoded_int(&mut self, data: i32) -> io::Result<usize> {
-        unimplemented!()
+        self.write_7_bit_encoded_int64(data as i64)
     }
 
     pub fn write_7_bit_encoded_int64(&mut self, data: i64) -> io::Result<usize> {
-        unimplemented!()
+        let mut value = data as u64;
+        let mut out_bytes: Vec<u8> = Vec::new();
+        while value > 0x7F {
+            let low_7_bits = value | 0b01111111;
+            value >>= 7;
+            let mut byte = low_7_bits as u8;
+            if value > 0 {
+                byte |= 0b10000000;
+            }
+            out_bytes.push(byte);
+        }
+        self.write_bytes(&out_bytes)
     }
 
     pub fn write_boolean(&mut self, data: bool) -> io::Result<usize> {
