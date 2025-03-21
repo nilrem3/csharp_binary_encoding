@@ -103,14 +103,14 @@ mod tests {
         assert_eq!(-2147483649_i64, propogate_inner_error!(reader.read_i64()?));
         assert_eq!(-112_i8, propogate_inner_error!(reader.read_i8()?));
         assert_eq!(5.2_f32, propogate_inner_error!(reader.read_f32()?));
-        assert_eq!("meowmeowmeowmeowmeow".to_string(), propogate_inner_error!(reader.read_string()?));
-        assert_eq!(624_u16, propogate_inner_error!(reader.read_u16()?));
-        assert_eq!(3000000000_u32, propogate_inner_error!(reader.read_u32()?));
-        assert_eq!(42307830165_u64, propogate_inner_error!(reader.read_u64()?));
         assert_eq!(-723_i32, propogate_inner_error!(reader.read_7_bit_encoded_int()?));
         assert_eq!(404_i32, propogate_inner_error!(reader.read_7_bit_encoded_int()?));
         assert_eq!(9000000000000000000_i64, propogate_inner_error!(reader.read_7_bit_encoded_int64()?));
         assert_eq!(-500000000000000000_i64, propogate_inner_error!(reader.read_7_bit_encoded_int64()?));
+        assert_eq!("meowmeowmeowmeowmeow".to_string(), propogate_inner_error!(reader.read_string()?));
+        assert_eq!(624_u16, propogate_inner_error!(reader.read_u16()?));
+        assert_eq!(3000000000_u32, propogate_inner_error!(reader.read_u32()?));
+        assert_eq!(42307830165_u64, propogate_inner_error!(reader.read_u64()?));
 
         let _ = cmd!(sh, "rm -f output.bin").run();
 
@@ -148,14 +148,14 @@ mod tests {
         writer.write_i64(-2147483649).unwrap();
         writer.write_i8(-112).unwrap();
         writer.write_f32(5.2_f32).unwrap();
-        writer.write_string("meowmeowmeowmeowmeow").unwrap();
-        writer.write_u16(624).unwrap();
-        writer.write_u32(3000000000).unwrap();
-        writer.write_u64(42307830165).unwrap();
         writer.write_7_bit_encoded_int(-723).unwrap();
         writer.write_7_bit_encoded_int(404).unwrap();
         writer.write_7_bit_encoded_int64(9000000000000000000).unwrap();
         writer.write_7_bit_encoded_int64(-500000000000000000).unwrap();
+        writer.write_string("meowmeowmeowmeowmeow").unwrap();
+        writer.write_u16(624).unwrap();
+        writer.write_u32(3000000000).unwrap();
+        writer.write_u64(42307830165).unwrap();
 
         cfg_if::cfg_if!{
             if #[cfg(feature = "f16")] {

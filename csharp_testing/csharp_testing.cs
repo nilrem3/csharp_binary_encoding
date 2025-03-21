@@ -65,14 +65,14 @@ int VerifyTestBin(bool verifyf16) {
             if(!AssertEq(reader.ReadInt64(), (long) -2147483649)) return 1;
             if(!AssertEq (reader.ReadSByte(), (sbyte)-112)) return 1;
             if(!AssertEq(reader.ReadSingle(), 5.2f)) return 1;
-            if(!AssertEq(reader.ReadString(), "meowmeowmeowmeowmeow")) return 1;
-            if(!AssertEq(reader.ReadUInt16(), (ushort)624)) return 1;
-            if(!AssertEq(reader.ReadUInt32(), (uint)3000000000)) return 1;
-            if(!AssertEq(reader.ReadUInt64(), (ulong)42307830165)) return 1;
             if(!AssertEq(reader.Read7BitEncodedInt(), -723)) return 1;
             if(!AssertEq(reader.Read7BitEncodedInt(), 404)) return 1;
             if(!AssertEq(reader.Read7BitEncodedInt64(), 9000000000000000000)) return 1;
             if(!AssertEq(reader.Read7BitEncodedInt64(), -500000000000000000)) return 1;
+            if(!AssertEq(reader.ReadString(), "meowmeowmeowmeowmeow")) return 1;
+            if(!AssertEq(reader.ReadUInt16(), (ushort)624)) return 1;
+            if(!AssertEq(reader.ReadUInt32(), (uint)3000000000)) return 1;
+            if(!AssertEq(reader.ReadUInt64(), (ulong)42307830165)) return 1;
             return 0;
         }
     }
@@ -105,6 +105,12 @@ void GenerateTestBin() {
             writer.Write((sbyte)-112);
             // write an individual f32
             writer.Write(5.2f);
+            // write an individual 7-bit encoded i32
+            writer.Write7BitEncodedInt(-723);
+            writer.Write7BitEncodedInt(404);
+            // write an individual 7-bit encoded i64
+            writer.Write7BitEncodedInt64(9000000000000000000);
+            writer.Write7BitEncodedInt64(-500000000000000000);
             // write an individual string
             writer.Write("meowmeowmeowmeowmeow");
             // write an individual u16
@@ -113,12 +119,6 @@ void GenerateTestBin() {
             writer.Write((uint)3000000000);
             // write an individual u64
             writer.Write((ulong)42307830165);
-            // write an individual 7-bit encoded i32
-            writer.Write7BitEncodedInt(-723);
-            writer.Write7BitEncodedInt(404);
-            // write an individual 7-bit encoded i64
-            writer.Write7BitEncodedInt64(9000000000000000000);
-            writer.Write7BitEncodedInt64(-500000000000000000);
         }
     }
 }
