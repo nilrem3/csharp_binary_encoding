@@ -1,5 +1,5 @@
 use std::io::{Error, Read};
-use crate::DataDecodeError;
+use crate::InvalidDataError;
 
 /// Analogous to the [`System.IO.BinaryReader`] C# Class.
 ///
@@ -40,15 +40,15 @@ where T: Read {
     }
 
     /// Equivalent to the ReadByte method in C#. Reads one byte from the stream. 
-    pub fn read_byte(&mut self) -> Result<Result<u8, DataDecodeError>, Error> {
+    pub fn read_byte(&mut self) -> Result<Result<u8, InvalidDataError>, Error> {
         let val = propogate_inner_error!(self.read_bytes(1)?);
         Ok(Ok(val[0]))
     }
 
     /// Equivalent to the ReadBytes method in C#. Reads the specified number of bytes.
-    pub fn read_bytes(&mut self, num_bytes: usize) -> Result<Result<Vec<u8>, DataDecodeError>, Error> {
+    pub fn read_bytes(&mut self, num_bytes: usize) -> Result<Result<Vec<u8>, InvalidDataError>, Error> {
         if num_bytes > self.buf.len() && !self.ensure_internal_buffer_size(num_bytes)? {
-            return Ok(Err(DataDecodeError::NotEnoughBytes))
+            return Ok(Err(InvalidDataError::NotEnoughBytes))
         }
         let output = Vec::from_iter(self.buf.drain(0..num_bytes));
         Ok(Ok(output))
@@ -56,23 +56,23 @@ where T: Read {
     
     /// Doesn't correspond to any specific c# method. Provided for convenience. Gets the next byte
     /// without advancing the data stream.
-    pub fn peek_byte(&mut self) -> Result<Result<u8, DataDecodeError>, Error> {
+    pub fn peek_byte(&mut self) -> Result<Result<u8, InvalidDataError>, Error> {
         Ok(Ok(propogate_inner_error!(self.read_bytes(1)?)[0]))
     }
     
     /// Doesn't correspond to any specific c# method. Provided for convenience. Gets the specified
     /// number of bytes without advancing the data stream.
-    pub fn peek_bytes(&mut self, num_bytes: usize) -> Result<Result<&[u8], DataDecodeError>, Error> {
+    pub fn peek_bytes(&mut self, num_bytes: usize) -> Result<Result<&[u8], InvalidDataError>, Error> {
         if !self.ensure_internal_buffer_size(num_bytes)? {
-            Ok(Err(DataDecodeError::NotEnoughBytes))
+            Ok(Err(InvalidDataError::NotEnoughBytes))
         } else {
             Ok(Ok(&self.buf.as_slice()[1..num_bytes]))
         }
     }
     
     /// Equivalent to the Read7BitEncodedInt method in C#.
-    /// Returns [DataDecodeError::IntegerOverflow] if the encoded value does not fit within 32 bits.
-    pub fn read_7_bit_encoded_int(&mut self) -> Result<Result<i32, DataDecodeError>, Error> {
+    /// Returns [InvalidDataError::IntegerOverflow] if the encoded value does not fit within 32 bits.
+    pub fn read_7_bit_encoded_int(&mut self) -> Result<Result<i32, InvalidDataError>, Error> {
         const MAX_BYTES: u32 = 5;
         let mut output: i32 = 0;
         let mut bytes_read = 0;
@@ -93,15 +93,15 @@ where T: Read {
         let max_value_for_most_significant_bit = u8::pow(2, 32 - 28) - 1;
         let last_byte: u8 = propogate_inner_error!(self.read_byte()?);
         if last_byte > max_value_for_most_significant_bit {
-            Ok(Err(DataDecodeError::IntegerOverflow))
+            Ok(Err(InvalidDataError::IntegerOverflow))
         } else {
             Ok(Ok(output + ((last_byte as i32) << 28_i32)))
         }
     }
     
     /// Equivalent to the Read7BitEncodedInt64 method in C#.
-    /// Returns [DataDecodeError::IntegerOverflow] if the encoded value does not fit within 64 bits.
-    pub fn read_7_bit_encoded_int64(&mut self) -> Result<Result<i64, DataDecodeError>, Error> {
+    /// Returns [InvalidDataError::IntegerOverflow] if the encoded value does not fit within 64 bits.
+    pub fn read_7_bit_encoded_int64(&mut self) -> Result<Result<i64, InvalidDataError>, Error> {
         const MAX_BYTES: u32 = 10;
         let mut output: i64 = 0; 
         let mut bytes_read = 0;
@@ -122,26 +122,26 @@ where T: Read {
         let max_value_for_most_significant_bit = u8::pow(2, 64 - 63) - 1;
         let last_byte = propogate_inner_error!(self.read_byte()?);
         if last_byte > max_value_for_most_significant_bit {
-            Ok(Err(DataDecodeError::IntegerOverflow))
+            Ok(Err(InvalidDataError::IntegerOverflow))
         } else {
             Ok(Ok(output + ((last_byte as i64) << 63)))
         }
     }
     
     /// Equivalent to the ReadBoolean method in C#.
-    pub fn read_boolean(&mut self) -> Result<Result<bool, DataDecodeError>, Error> {
+    pub fn read_boolean(&mut self) -> Result<Result<bool, InvalidDataError>, Error> {
         let byte = propogate_inner_error!(self.read_byte()?);
         Ok(Ok(byte != 0))
     }
     
     /// Equivalent to the ReadSingle method in C#.
-    pub fn read_f32(&mut self) -> Result<Result<f32, DataDecodeError>, Error> {
+    pub fn read_f32(&mut self) -> Result<Result<f32, InvalidDataError>, Error> {
         let bytes: [u8; 4] = propogate_inner_error!(self.read_bytes(4)?).try_into().unwrap();
         Ok(Ok(f32::from_le_bytes(bytes)))
     }
 
     /// Equivalent to the ReadDouble method in C#.
-    pub fn read_f64(&mut self) -> Result<Result<f64, DataDecodeError>, Error> {
+    pub fn read_f64(&mut self) -> Result<Result<f64, InvalidDataError>, Error> {
         let bytes: [u8; 8] = propogate_inner_error!(self.read_bytes(8)?).try_into().unwrap();
         Ok(Ok(f64::from_le_bytes(bytes)))
     }
@@ -150,60 +150,60 @@ where T: Read {
     /// Requires the `f16` feature.
     #[cfg_attr(docsrs, doc(cfg(feature = "f16")))]
     #[cfg(feature = "f16")]
-    pub fn read_f16(&mut self) -> Result<Result<f16, DataDecodeError>, Error> {
+    pub fn read_f16(&mut self) -> Result<Result<f16, InvalidDataError>, Error> {
         let bytes: [u8; 2] = propogate_inner_error!(self.read_bytes(2)?).try_into().unwrap();
         Ok(Ok(f16::from_le_bytes(bytes)))
     }
     
     /// Equivalent to the ReadString method in C#.
-    /// Returns an [DataDecodeError::InvalidUtf8] if the data read is not valid utf-8.
-    pub fn read_string(&mut self) -> Result<Result<String, DataDecodeError>, Error> {
+    /// Returns an [InvalidDataError::InvalidUtf8] if the data read is not valid utf-8.
+    pub fn read_string(&mut self) -> Result<Result<String, InvalidDataError>, Error> {
         let length: usize = propogate_inner_error!(self.read_7_bit_encoded_int()?) as usize;
         let string_bytes = propogate_inner_error!(self.read_bytes(length)?);
         match std::str::from_utf8(string_bytes.as_slice()) {
             Ok(v) => Ok(Ok(v.to_string())),
-            Err(_) => Ok(Err(DataDecodeError::InvalidUtf8))
+            Err(_) => Ok(Err(InvalidDataError::InvalidUtf8))
         }
     }
     
     /// Equivalent to the ReadSByte method in C#.
-    pub fn read_i8(&mut self) -> Result<Result<i8, DataDecodeError>, Error> {
+    pub fn read_i8(&mut self) -> Result<Result<i8, InvalidDataError>, Error> {
         let bytes: [u8; 1] = [propogate_inner_error!(self.read_byte()?)];
         Ok(Ok(i8::from_le_bytes(bytes)))
     }
 
     /// Equivalent to the ReadInt16 method in C#.
-    pub fn read_i16(&mut self) -> Result<Result<i16, DataDecodeError>, Error> {
+    pub fn read_i16(&mut self) -> Result<Result<i16, InvalidDataError>, Error> {
         let bytes: [u8; 2] = propogate_inner_error!(self.read_bytes(2)?).try_into().unwrap();
         Ok(Ok(i16::from_le_bytes(bytes)))
     }
 
     /// Equivalent to the ReadInt32 method in C#.
-    pub fn read_i32(&mut self) -> Result<Result<i32, DataDecodeError>, Error> {
+    pub fn read_i32(&mut self) -> Result<Result<i32, InvalidDataError>, Error> {
         let bytes: [u8; 4] = propogate_inner_error!(self.read_bytes(4)?).try_into().unwrap();
         Ok(Ok(i32::from_le_bytes(bytes)))
     }
 
     /// Equivalent to the ReadInt64 method in C#.
-    pub fn read_i64(&mut self) -> Result<Result<i64, DataDecodeError>, Error> {
+    pub fn read_i64(&mut self) -> Result<Result<i64, InvalidDataError>, Error> {
         let bytes: [u8; 8] = propogate_inner_error!(self.read_bytes(8)?).try_into().unwrap();
         Ok(Ok(i64::from_le_bytes(bytes)))
     }
 
     /// Equivalent to the ReadUint16 method in C#.
-    pub fn read_u16(&mut self) -> Result<Result<u16, DataDecodeError>, Error> {
+    pub fn read_u16(&mut self) -> Result<Result<u16, InvalidDataError>, Error> {
         let bytes: [u8; 2] = propogate_inner_error!(self.read_bytes(2)?).try_into().unwrap();
         Ok(Ok(u16::from_le_bytes(bytes)))
     }
 
     /// Equivalent to the ReadUint32 method in C#.
-    pub fn read_u32(&mut self) -> Result<Result<u32, DataDecodeError>, Error> {
+    pub fn read_u32(&mut self) -> Result<Result<u32, InvalidDataError>, Error> {
         let bytes: [u8; 4] = propogate_inner_error!(self.read_bytes(4)?).try_into().unwrap();
         Ok(Ok(u32::from_le_bytes(bytes)))
     }
 
     /// Equivalent to the ReadUint64 method in C#.
-    pub fn read_u64(&mut self) -> Result<Result<u64, DataDecodeError>, Error> {
+    pub fn read_u64(&mut self) -> Result<Result<u64, InvalidDataError>, Error> {
         let bytes: [u8; 8] = propogate_inner_error!(self.read_bytes(8)?).try_into().unwrap();
         Ok(Ok(u64::from_le_bytes(bytes)))
     }
@@ -211,9 +211,9 @@ where T: Read {
     // Implementation translated from the c# dotnet runtime's implementation of BinaryReader
     // MIT Licensed by the .NET foundation, can be found at https://github.com/dotnet/runtime
     /// Equivalent to the ReadChar method in C#.
-    /// Returns [DataDecodeError::InvalidUtf8] if the next character is not a valid character in
+    /// Returns [InvalidDataError::InvalidUtf8] if the next character is not a valid character in
     /// utf-8
-    pub fn read_char(&mut self) -> Result<Result<char, DataDecodeError>, Error> {
+    pub fn read_char(&mut self) -> Result<Result<char, InvalidDataError>, Error> {
         const MAX_BYTES_PER_CHAR: usize = 4;
         let mut bytes: [u8; MAX_BYTES_PER_CHAR] = [0; MAX_BYTES_PER_CHAR];
         let mut current_index: usize = 0;
@@ -238,7 +238,7 @@ where T: Read {
                 return Ok(Ok(result.trim_matches(char::from(0)).chars().next().expect("?")))
             } 
         } 
-        Ok(Err(DataDecodeError::InvalidUtf8)) // read two chars somehow
+        Ok(Err(InvalidDataError::InvalidUtf8)) // read two chars somehow
     }
     
 }

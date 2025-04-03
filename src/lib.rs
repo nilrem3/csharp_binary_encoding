@@ -29,9 +29,10 @@ pub use encoding::BinaryWriter;
 
 
 /// Indicates that an error has occured because the bytes being decoded were invalid in some way.
+/// Note: In versions 0.2.0 and before this was called DataDecodeError.
 #[non_exhaustive]
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-pub enum DataDecodeError{
+pub enum InvalidDataError{
     /// The underlying reader did not return enough data to construct the type being read.
     NotEnoughBytes,
     /// The underlying data overflowed the current integer type being constructed.
@@ -40,7 +41,7 @@ pub enum DataDecodeError{
     InvalidUtf8
 }
 
-impl Display for DataDecodeError {
+impl Display for InvalidDataError {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         match self {
             Self::NotEnoughBytes => write!(f, "not enough bytes to decode"),
@@ -50,7 +51,7 @@ impl Display for DataDecodeError {
     }
 }
 
-impl stdError for DataDecodeError{
+impl stdError for InvalidDataError{
     fn source(&self) -> Option<&(dyn stdError + 'static)> {
         None // there isn't a lower-level error source
     }
@@ -74,7 +75,7 @@ mod tests {
     const TEST_FOLDER: &str = "csharp_testing";
 
     #[test]
-    fn decode_all_types() -> Result<Result<(), DataDecodeError>, Error>{
+    fn decode_all_types() -> Result<Result<(), InvalidDataError>, Error>{
         use std::fs::File;
         use xshell::{Shell, cmd};
         let sh = Shell::new().unwrap();
@@ -167,7 +168,7 @@ mod tests {
     }
 
     #[test] 
-    fn overflow_7_bit_encoded_int() -> Result<Result<(), DataDecodeError>, Error>{
+    fn overflow_7_bit_encoded_int() -> Result<Result<(), InvalidDataError>, Error>{
         use std::io::Cursor;
         let data: [u8; 15] = [ 0xFF; 15 ];
         let cursor = Cursor::new(data);
