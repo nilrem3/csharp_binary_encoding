@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased 
 - Renamed DataDecodeError to InvalidDataError to more accurately indicate the category of error represented by this type
 - Create InvalidDataError to represent one of the types of DataDecodeError
+- Added an example for writing data to README.md
 
 ## [0.2.0]
 - Added BinaryWriter struct

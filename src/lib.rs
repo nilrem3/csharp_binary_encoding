@@ -74,8 +74,8 @@ mod tests {
 
         let _ = cmd!(sh, "rm -f input.bin").run().unwrap();
 
-        let file = File::create(TEST_FOLDER.to_string() + "/input.bin").unwrap();
-        let mut writer = BinaryWriter::new(file);
+        let mut file = File::create(TEST_FOLDER.to_string() + "/input.bin").unwrap();
+        let mut writer = BinaryWriter::new(&mut file);
 
         writer.write_boolean(true).unwrap();
         writer.write_boolean(false).unwrap();
