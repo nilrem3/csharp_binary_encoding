@@ -3,10 +3,13 @@ use std::error::Error as stdError;
 use thiserror::Error;
 use std::fmt::{Display, Formatter};
 
+/// Indicates that an error occured while decoding the data.
 #[derive(Error, Debug)]
 pub enum DataDecodeError {
+    /// An error occured while trying to read the data.
     #[error(transparent)]
     IO(#[from] std::io::Error),
+    /// The value of the data itself led to an error.
     #[error(transparent)]
     InvalidData(#[from] InvalidDataError)
 }
@@ -116,7 +119,7 @@ where T: Read {
     }
     
     /// Equivalent to the Read7BitEncodedInt method in C#.
-    /// Returns [InvalidDataError::IntegerOverflow] if the encoded value does not fit within 32 bits.
+    /// Returns [DataDecodeError]::InvalidData([InvalidDataError::IntegerOverflow]) if the encoded value does not fit within 32 bits.
     pub fn read_7_bit_encoded_int(&mut self) -> Result<i32, DataDecodeError> {
         const MAX_BYTES: u32 = 5;
         let mut output: i32 = 0;
@@ -145,7 +148,7 @@ where T: Read {
     }
     
     /// Equivalent to the Read7BitEncodedInt64 method in C#.
-    /// Returns [InvalidDataError::IntegerOverflow] if the encoded value does not fit within 64 bits.
+    /// Returns [DataDecodeError]::InvalidData([InvalidDataError::IntegerOverflow]) if the encoded value does not fit within 64 bits.
     pub fn read_7_bit_encoded_int64(&mut self) -> Result<i64, DataDecodeError> {
         const MAX_BYTES: u32 = 10;
         let mut output: i64 = 0; 
@@ -201,7 +204,7 @@ where T: Read {
     }
     
     /// Equivalent to the ReadString method in C#.
-    /// Returns an [InvalidDataError::InvalidUtf8] if the data read is not valid utf-8.
+    /// Returns an [DataDecodeError]::InvalidData([InvalidDataError::InvalidUtf8]) if the data read is not valid utf-8.
     pub fn read_string(&mut self) -> Result<String, DataDecodeError> {
         let length: usize = self.read_7_bit_encoded_int()?.try_into().unwrap();
         let string_bytes = self.read_bytes(length)?;
@@ -256,7 +259,7 @@ where T: Read {
     // Implementation translated from the c# dotnet runtime's implementation of BinaryReader
     // MIT Licensed by the .NET foundation, can be found at https://github.com/dotnet/runtime
     /// Equivalent to the ReadChar method in C#.
-    /// Returns [InvalidDataError::InvalidUtf8] if the next character is not a valid character in
+    /// Returns [DataDecodeError]::InvalidData([InvalidDataError::InvalidUtf8]) if the next character is not a valid character in
     /// utf-8
     pub fn read_char(&mut self) -> Result<char, DataDecodeError> {
         const MAX_BYTES_PER_CHAR: usize = 4;
