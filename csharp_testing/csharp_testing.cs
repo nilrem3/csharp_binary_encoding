@@ -73,6 +73,7 @@ int VerifyTestBin(bool verifyf16) {
             if(!AssertEq(reader.ReadUInt16(), (ushort)624)) return 1;
             if(!AssertEq(reader.ReadUInt32(), (uint)3000000000)) return 1;
             if(!AssertEq(reader.ReadUInt64(), (ulong)42307830165)) return 1;
+            if(!AssertEq(reader.ReadChar(), '\u0000')) return 1;
             return 0;
         }
     }
@@ -119,6 +120,8 @@ void GenerateTestBin() {
             writer.Write((uint)3000000000);
             // write an individual u64
             writer.Write((ulong)42307830165);
+            // write the null character
+            writer.Write('\u0000');
         }
     }
 }

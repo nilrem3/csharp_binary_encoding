@@ -58,6 +58,7 @@ mod tests {
         assert_eq!(624_u16, reader.read_u16()?);
         assert_eq!(3000000000_u32, reader.read_u32()?);
         assert_eq!(42307830165_u64, reader.read_u64()?);
+        assert_eq!('\0', reader.read_char()?);
 
         let _ = cmd!(sh, "rm -f output.bin").run();
 
@@ -103,6 +104,7 @@ mod tests {
         writer.write_u16(624).unwrap();
         writer.write_u32(3000000000).unwrap();
         writer.write_u64(42307830165).unwrap();
+        writer.write_char('\0').unwrap();
 
         cfg_if::cfg_if!{
             if #[cfg(feature = "f16")] {
