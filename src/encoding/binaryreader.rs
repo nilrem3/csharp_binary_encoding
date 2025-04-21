@@ -271,7 +271,11 @@ where T: Read {
             bytes[current_index] = self.read_byte()?;
             decode_result = String::from_utf8(bytes.to_vec());
             if let Ok(result) = &decode_result {
-                let result = result.trim_matches(char::from(0)); // trim null bytes
+                let mut result = result.as_str();
+                // trim null bytes, but always keep at least one byte
+                while result.chars().last() == Some(char::from(0)) && result.chars().collect::<Vec<_>>().len() > 1 {
+                    result = &result[0..result.len() - 1]; 
+                }
                 num_chars_read = result.chars().count();
                 break;
             } else {
@@ -283,7 +287,7 @@ where T: Read {
         }
         if num_chars_read == 1 {
             if let Ok(result) = decode_result {
-                return Ok(result.trim_matches(char::from(0)).chars().next().expect("?"))
+                return Ok(result.chars().next().expect("?"))
             } 
         } 
         Err(DataDecodeError::InvalidData(InvalidDataError::InvalidUtf8)) // read two chars somehow
