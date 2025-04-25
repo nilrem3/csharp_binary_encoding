@@ -60,7 +60,8 @@ impl stdError for InvalidDataError{
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub struct BinaryReader<T: Read> {
     input: T,
-    buf: Vec<u8>
+    buf: Vec<u8>,
+    num_bytes_read: u64
 }
 
 /// All functions in this implementation return an error if the underlying Read returns an error,
@@ -73,8 +74,14 @@ where T: Read {
     pub fn new(input: T) -> Self {
         Self {
             input,
-            buf: Vec::new()
+            buf: Vec::new(),
+            num_bytes_read: 0
         }
+    }
+
+    /// Returns the total number of bytes that have been read from the input Reader so far.
+    pub fn num_bytes_read(&self) -> u64 {
+        self.num_bytes_read
     }
 
     /// Returns true if enough bytes could be allocated, false otherwise, and Err if the underlying
@@ -99,6 +106,7 @@ where T: Read {
         if num_bytes > self.buf.len() && !self.ensure_internal_buffer_size(num_bytes)? {
             return Err(DataDecodeError::InvalidData(InvalidDataError::NotEnoughBytes))
         }
+        self.num_bytes_read += num_bytes as u64;
         Ok(Vec::from_iter(self.buf.drain(0..num_bytes)))
     }
     
