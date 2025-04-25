@@ -44,5 +44,9 @@ assert_eq!(
 - Developed for and tested with .NET version 9.0. Compatibility with other versions is likely
   present but should not be counted on.
 
+## Contributions
+- Some methods in this library were translated directly from the [dotnet runtime library]'s implementation. For details see the CONTRIBUTIONS file.
+
 [`System.IO.BinaryWriter`]: <https://learn.microsoft.com/en-us/dotnet/api/system.io.binarywriter>
 [`System.IO.BinaryReader`]: <https://learn.microsoft.com/en-us/dotnet/api/system.io.binaryreader>
+[dotnet runtime library]: <https://github.com/dotnet/runtime>

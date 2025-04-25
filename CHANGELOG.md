@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 - Add num_bytes_read method to BinaryReader
 - Add num_bytes_written method to BinaryReader
+- Change licensing information to be more clear about functions translated from dotnet
 
 ## [0.3.1]
 - Fixed a bug where BinaryReader would not correctly read the null byte
