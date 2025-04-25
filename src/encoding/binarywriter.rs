@@ -8,7 +8,8 @@ use std::io::Write;
 /// [`System.IO.BinaryWriter`]:
 /// <https://learn.microsoft.com/en-us/dotnet/api/system.io.binarywriter>
 pub struct BinaryWriter<T: Write> {
-    output: T
+    output: T,
+    num_bytes_written: u64
 }
 
 impl<T> BinaryWriter<T>
@@ -17,17 +18,24 @@ where T: Write {
     ///Creates a new BinaryWriter which will write data to the provided Writer
     pub fn new(output: T) -> Self {
         Self {
-            output
+            output,
+            num_bytes_written: 0
         }
+    }
+
+    /// Returns the total number of bytes written to the underlying Writer
+    pub fn num_bytes_written(&self) -> u64 {
+        self.num_bytes_written
     }
     
     /// Equivalent to the Write method in C# called with an argument of type Byte.
     pub fn write_byte(&mut self, data: u8) -> io::Result<usize> {
-        self.output.write(&[data])
+        self.write_bytes(&[data])
     }
 
     /// Equivalent to the Write method in C# called with an argument of type Byte[].
     pub fn write_bytes(&mut self, data: &[u8]) -> io::Result<usize> {
+        self.num_bytes_written += data.len() as u64;
         self.output.write(data)
     }
 
@@ -75,19 +83,19 @@ where T: Write {
     
     /// Equivalent to the Write method in C# called with an argument of type Single
     pub fn write_f32(&mut self, data: f32) -> io::Result<usize> {
-        self.output.write(&data.to_le_bytes())
+        self.write_bytes(&data.to_le_bytes())
     }
 
     /// Equivalent to the Write method in C# called with an argument of type Double
     pub fn write_f64(&mut self, data: f64) -> io::Result<usize> {
-        self.output.write(&data.to_le_bytes())
+        self.write_bytes(&data.to_le_bytes())
     }
 
     /// Equivalent to the Write method in C# called with an argument of type Half
     #[cfg_attr(docsrs, doc(cfg(feature = "f16")))]
     #[cfg(feature = "f16")]
     pub fn write_f16(&mut self, data: f16) -> io::Result<usize> {
-        self.output.write(&data.to_le_bytes())
+        self.write_bytes(&data.to_le_bytes())
     }
 
     /// Equivalent to the Write method in C# called with an argument of type String
@@ -103,37 +111,37 @@ where T: Write {
     
     /// Equivalent to the Write method in C# called with an argument of type SByte
     pub fn write_i8(&mut self, data: i8) -> io::Result<usize> {
-        self.output.write(&data.to_le_bytes())
+        self.write_bytes(&data.to_le_bytes())
     }
 
     /// Equivalent to the Write method in C# called with an argument of type Int16
     pub fn write_i16(&mut self, data: i16) -> io::Result<usize> {
-        self.output.write(&data.to_le_bytes())
+        self.write_bytes(&data.to_le_bytes())
     }
 
     /// Equivalent to the Write method in C# called with an argument of type Int32
     pub fn write_i32(&mut self, data: i32) -> io::Result<usize> {
-        self.output.write(&data.to_le_bytes())
+        self.write_bytes(&data.to_le_bytes())
     }
 
     /// Equivalent to the Write method in C# called with an argument of type Int64
     pub fn write_i64(&mut self, data: i64) -> io::Result<usize> {
-        self.output.write(&data.to_le_bytes())
+        self.write_bytes(&data.to_le_bytes())
     }
 
     /// Equivalent to the Write method in C# called with an argument of type UInt16
     pub fn write_u16(&mut self, data: u16) -> io::Result<usize> {
-        self.output.write(&data.to_le_bytes())
+        self.write_bytes(&data.to_le_bytes())
     }
 
     /// Equivalent to the Write method in C# called with an argument of type UInt32
     pub fn write_u32(&mut self, data: u32) -> io::Result<usize> {
-        self.output.write(&data.to_le_bytes())
+        self.write_bytes(&data.to_le_bytes())
     }
 
     /// Equivalent to the Write method in C# called with an argument of type UInt64
     pub fn write_u64(&mut self, data: u64) -> io::Result<usize> {
-        self.output.write(&data.to_le_bytes())
+        self.write_bytes(&data.to_le_bytes())
     }
 
     /// Equivalent to the Write method in C# called with an argument of type Char
