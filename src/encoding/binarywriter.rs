@@ -27,6 +27,10 @@ where T: Write {
     pub fn num_bytes_written(&self) -> u64 {
         self.num_bytes_written
     }
+
+    fn seek(&mut self, pos: std::io::SeekFrom) -> std::io::Result<u64> where T: std::io::Seek {
+        self.output.seek(pos)
+    }
     
     /// Equivalent to the Write method in C# called with an argument of type Byte.
     pub fn write_byte(&mut self, data: u8) -> io::Result<usize> {
@@ -150,4 +154,10 @@ where T: Write {
         self.write_bytes(data.encode_utf8(buf.as_mut_slice()).as_bytes())
     }
 
+}
+
+impl<T> std::io::Seek for BinaryWriter<T> where T: std::io::Seek + std::io::Write {
+    fn seek(&mut self, pos: io::SeekFrom) -> io::Result<u64> {
+        self.seek(pos)
+    }
 }
