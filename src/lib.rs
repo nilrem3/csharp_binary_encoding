@@ -15,7 +15,6 @@ pub use encoding::BinaryWriter;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io::Error;
     use crate::encoding::DataDecodeError;
 
     const TEST_FOLDER: &str = "csharp_testing";
