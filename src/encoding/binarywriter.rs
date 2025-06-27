@@ -28,6 +28,11 @@ where T: Write {
         self.num_bytes_written
     }
 
+    /// Decrease the counter of number of bytes written by n
+    pub fn remove_bytes_written(&mut self, n: u64) {
+        self.num_bytes_written -= n;
+    }
+
     fn seek(&mut self, pos: std::io::SeekFrom) -> std::io::Result<u64> where T: std::io::Seek {
         self.output.seek(pos)
     }

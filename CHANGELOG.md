@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 - Added std::io::Seek implementation for BinaryWriter\<T> when T: std::io::Seek
+- Added remove_bytes_written
 
 ## [0.4.0]
 - Add num_bytes_read method to BinaryReader
