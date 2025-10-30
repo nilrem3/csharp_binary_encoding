@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added std::io::Seek implementation for BinaryWriter\<T> when T: std::io::Seek
 - Added remove_bytes_written
 - Update documentation to be clear about when bytes are still consumed in error states.
+- Fix a bug in BinaryReader::peek_bytes
 
 ## [0.4.0]
 - Add num_bytes_read method to BinaryReader

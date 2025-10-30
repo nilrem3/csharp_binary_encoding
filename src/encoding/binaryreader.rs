@@ -122,7 +122,7 @@ where T: Read {
         if !self.ensure_internal_buffer_size(num_bytes)? {
             Err(DataDecodeError::InvalidData(InvalidDataError::NotEnoughBytes))
         } else {
-            Ok(&self.buf.as_slice()[1..num_bytes])
+            Ok(&self.buf.as_slice()[0..num_bytes])
         }
     }
     
